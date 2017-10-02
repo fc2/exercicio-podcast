@@ -14,6 +14,11 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
     int linkResource;
 
+    public static final String EP_TITLE = "Title";
+    public static final String EP_PUBDATE = "PubDate";
+    public static final String EP_DESCRIPTION = "Description";
+
+
     public XmlFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
         super(context, resource, objects);
         linkResource = resource;
