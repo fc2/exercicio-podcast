@@ -44,10 +44,10 @@ episódio, atualizações em segundo plano, notificações de novos episódios, 
 | Passo | Completou? |
 | ------ | ------ |
 | 1 | ✅ |
-| 2 | **não** |
-| 3 | **não** |
-| 4 | **não** |
-| 5 | **não** |
+| 2 | ✅ |
+| 3 | ✅ |
+| 4 | ✅ |
+| 5 | ✅ |
 | 6 | **não** |
 | 7 | **não** |
 | 8 | **não** |
