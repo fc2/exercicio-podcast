@@ -1,9 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="7dp"
+    android:layout_marginTop="10dp"
+    android:orientation="vertical"
     tools:context="br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity">
 
-</android.support.constraint.ConstraintLayout>
+
+    //Title
+    <TextView
+        android:id="@+id/epTitleTv"
+        android:layout_width="100dip"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_weight="8"
+        android:textSize="20sp"
+        android:textStyle="bold"/>
+
+    //PubDate
+    <TextView
+        android:id="@+id/epPubDateTv"
+        android:layout_width="100dip"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_weight="8"
+        android:textSize="15sp" />
+
+
+    //Description
+    <TextView
+        android:id="@+id/epDescriptionTv"
+        android:layout_width="100dip"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_weight="8"
+        android:textSize="15sp" />
+
+</LinearLayout>
+
+
+
