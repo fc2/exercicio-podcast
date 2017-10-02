@@ -12,30 +12,27 @@
     //Title
     <TextView
         android:id="@+id/epTitleTv"
-        android:layout_width="100dip"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
-        android:layout_weight="8"
         android:textSize="20sp"
         android:textStyle="bold"/>
 
     //PubDate
     <TextView
         android:id="@+id/epPubDateTv"
-        android:layout_width="100dip"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
-        android:layout_weight="8"
         android:textSize="15sp" />
 
 
     //Description
     <TextView
         android:id="@+id/epDescriptionTv"
-        android:layout_width="100dip"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
-        android:layout_weight="8"
         android:textSize="15sp" />
 
 </LinearLayout>
