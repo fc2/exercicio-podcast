@@ -51,11 +51,21 @@ public class PodcastProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
-        // TODO: Implement this to handle query requests from clients.
-        throw new UnsupportedOperationException("Not yet implemented");
+        //Implement this to handle query requests from clients.
+        //acessando o nosso banco no modo read
+        final SQLiteDatabase database = podcastDBHelper.getReadableDatabase();
+
+        Cursor cursor = database.query(PodcastProviderContract.EPISODE_TABLE, projection,
+                selection, selectionArgs, null, null, sortOrder);
+
+        //notificar caso ocorra mudancas
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+        return cursor;
+
     }
 
-    
+
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         // Implement this to handle requests to delete one or more rows.
