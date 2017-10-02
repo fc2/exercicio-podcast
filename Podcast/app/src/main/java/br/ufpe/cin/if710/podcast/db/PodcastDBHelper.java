@@ -11,7 +11,7 @@ public class PodcastDBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_TABLE = "episodes";
     private static final int DB_VERSION = 1;
 
-    public PodcastDBHelper(Context context) {
+    private PodcastDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DB_VERSION);
     }
 
