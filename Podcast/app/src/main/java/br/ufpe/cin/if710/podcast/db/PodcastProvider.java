@@ -20,7 +20,6 @@ public class PodcastProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         // Implement this to initialize your content provider on startup.
-        Context context;
         Context context = this.getContext();
         podcastDBHelper = PodcastDBHelper.getInstance(context);
         return true;
@@ -56,11 +55,19 @@ public class PodcastProvider extends ContentProvider {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-
+    
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         // Implement this to handle requests to delete one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+        int numRowsDeleted;
+        numRowsDeleted = this.podcastDBHelper.getWritableDatabase().delete(
+                PodcastProviderContract.EPISODE_TABLE, selection,
+                selectionArgs);
+
+        if (numRowsDeleted != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return numRowsDeleted;
     }
 
     @Override
