@@ -2,17 +2,25 @@ package br.ufpe.cin.if710.podcast.ui.adapter;
 
 import java.util.List;
 import android.content.Context;
+import android.content.Intent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
+import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
 
 public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
     int linkResource;
+
+    public static final String EP_TITLE = "Title";
+    public static final String EP_PUBDATE = "PubDate";
+    public static final String EP_DESCRIPTION = "Description";
+
 
     public XmlFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
         super(context, resource, objects);
@@ -52,7 +60,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
         if (convertView == null) {
             convertView = View.inflate(getContext(), linkResource, null);
@@ -63,8 +71,25 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-        holder.item_title.setText(getItem(position).getTitle());
-        holder.item_date.setText(getItem(position).getPubDate());
+
+        final ItemFeed item = getItem(position);
+
+        holder.item_title.setText(item.getTitle());
+        holder.item_date.setText(item.getPubDate());
+
+        convertView.setOnClickListener((new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Intent detailsIntent = new Intent(getContext(), EpisodeDetailActivity.class);
+                detailsIntent.putExtra(EP_TITLE, item.getTitle());
+                detailsIntent.putExtra(EP_PUBDATE, item.getPubDate());
+                detailsIntent.putExtra(EP_DESCRIPTION, item.getDescription());
+
+                getContext().startActivity(detailsIntent);
+            }
+        }));
+
         return convertView;
     }
 }
