@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="7dp"
     android:layout_marginTop="10dp"
+    android:layout_marginLeft="10dp"
     android:orientation="vertical"
     tools:context="br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity">
 
@@ -14,7 +15,6 @@
         android:id="@+id/epTitleTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
         android:textSize="20sp"
         android:textStyle="bold"/>
 
@@ -23,7 +23,6 @@
         android:id="@+id/epPubDateTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
         android:textSize="15sp" />
 
 
@@ -32,7 +31,6 @@
         android:id="@+id/epDescriptionTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
         android:textSize="15sp" />
 
 </LinearLayout>
