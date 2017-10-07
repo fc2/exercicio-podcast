@@ -28,4 +28,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     compile 'com.facebook.stetho:stetho:1.4.2'
+
+    //para usar o a navegacao do NavUtils
+    compile 'com.android.support:support-v4:26.0.0-alpha1'
 }

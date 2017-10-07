@@ -2,6 +2,7 @@ package br.ufpe.cin.if710.podcast.ui;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -40,7 +41,8 @@ public class EpisodeDetailActivity extends Activity {
         switch (item.getItemId()){
             // Respondendo  action bar's Up/Home button
             case android.R.id.home:
-                onBackPressed();
+                NavUtils.navigateUpFromSameTask(this);
+                //onBackPressed();
                 return true;
         }
         return super.onOptionsItemSelected(item);
