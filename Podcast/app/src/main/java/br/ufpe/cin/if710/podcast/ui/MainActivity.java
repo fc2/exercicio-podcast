@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
@@ -42,6 +43,7 @@ public class MainActivity extends Activity {
     //TODO teste com outros links de podcast
 
     private ListView itemsListView;
+    private ProgressBar mLoadingIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +52,10 @@ public class MainActivity extends Activity {
 
         Stetho.initializeWithDefaults(this);
 
+        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+
         itemsListView = (ListView) findViewById(R.id.items);
+
     }
 
     @Override
@@ -111,6 +116,7 @@ public class MainActivity extends Activity {
         protected void onPostExecute(List<ItemFeed> feed) {
             Toast.makeText(getApplicationContext(), "terminando...", Toast.LENGTH_SHORT).show();
             new ReadFromDataBase().execute();
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -207,7 +213,6 @@ public class MainActivity extends Activity {
             //atualizar o list view
             itemsListView.setAdapter(adapter);
             itemsListView.setTextFilterEnabled(true);
-
         }
     }
 
