@@ -3,12 +3,11 @@ package br.ufpe.cin.if710.podcast.ui;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
 import br.ufpe.cin.if710.podcast.R;
-import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
+import br.ufpe.cin.if710.podcast.ui.adapter.PodcastFeedAdapter;
 
 public class EpisodeDetailActivity extends Activity {
 
@@ -30,9 +29,9 @@ public class EpisodeDetailActivity extends Activity {
         this.mEpPubDateTV = findViewById(R.id.epPubDateTv);
         this.mEpDescriptionTV = findViewById(R.id.epDescriptionTv);
 
-        this.mEpTitleTV.setText(getIntent().getExtras().getString(XmlFeedAdapter.EP_TITLE));
-        this.mEpPubDateTV.setText(getIntent().getExtras().getString(XmlFeedAdapter.EP_PUBDATE));
-        this.mEpDescriptionTV.setText(getIntent().getExtras().getString(XmlFeedAdapter.EP_DESCRIPTION));
+        this.mEpTitleTV.setText(getIntent().getExtras().getString(PodcastFeedAdapter.EP_TITLE));
+        this.mEpPubDateTV.setText(getIntent().getExtras().getString(PodcastFeedAdapter.EP_PUBDATE));
+        this.mEpDescriptionTV.setText(getIntent().getExtras().getString(PodcastFeedAdapter.EP_DESCRIPTION));
     }
 
 

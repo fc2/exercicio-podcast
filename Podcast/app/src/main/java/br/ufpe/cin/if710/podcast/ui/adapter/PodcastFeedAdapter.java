@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,7 +14,7 @@ import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
 
-public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
+public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
 
     int linkResource;
 
@@ -22,7 +23,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
     public static final String EP_DESCRIPTION = "Description";
 
 
-    public XmlFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
+    public PodcastFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
         super(context, resource, objects);
         linkResource = resource;
     }
@@ -42,22 +43,13 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
      */
 
 
-	/*
-	@Override
-	public View getView(int position, View convertView, ViewGroup parent) {
-		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View rowView = inflater.inflate(R.layout.itemlista, parent, false);
-		TextView textView = (TextView) rowView.findViewById(R.id.item_title);
-		textView.setText(items.get(position).getTitle());
-	    return rowView;
-	}
-	/**/
-
     //http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder
     static class ViewHolder {
         TextView item_title;
         TextView item_date;
+        Button downloadButton;
     }
+
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
@@ -67,6 +59,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
             holder = new ViewHolder();
             holder.item_title = (TextView) convertView.findViewById(R.id.item_title);
             holder.item_date = (TextView) convertView.findViewById(R.id.item_date);
+            holder.downloadButton = (Button) convertView.findViewById(R.id.item_action);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -79,8 +72,10 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
         convertView.setOnClickListener((new View.OnClickListener() {
 
+            //escutando clicks no itemFeed da lista
             @Override
             public void onClick(View v) {
+
                 Intent detailsIntent = new Intent(getContext(), EpisodeDetailActivity.class);
                 detailsIntent.putExtra(EP_TITLE, item.getTitle());
                 detailsIntent.putExtra(EP_PUBDATE, item.getPubDate());
@@ -89,6 +84,14 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
                 getContext().startActivity(detailsIntent);
             }
         }));
+
+        //ouvindo click no botao de baixar
+        holder.downloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //// TODO: Baixar o posdcast
+            }
+        });
 
         return convertView;
     }

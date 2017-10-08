@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -30,11 +29,10 @@ import java.util.List;
 
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
-import br.ufpe.cin.if710.podcast.db.PodcastProvider;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
-import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
+import br.ufpe.cin.if710.podcast.ui.adapter.PodcastFeedAdapter;
 
 public class MainActivity extends Activity {
 
@@ -88,7 +86,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
-        XmlFeedAdapter adapter = (XmlFeedAdapter) itemsListView.getAdapter();
+        PodcastFeedAdapter adapter = (PodcastFeedAdapter) itemsListView.getAdapter();
         adapter.clear();
     }
 
@@ -208,7 +206,7 @@ public class MainActivity extends Activity {
             }
 
             //Adapter Personalizado
-            XmlFeedAdapter adapter = new XmlFeedAdapter(getApplicationContext(), R.layout.itemlista, items);
+            PodcastFeedAdapter adapter = new PodcastFeedAdapter(getApplicationContext(), R.layout.itemlista, items);
 
             //atualizar o list view
             itemsListView.setAdapter(adapter);
