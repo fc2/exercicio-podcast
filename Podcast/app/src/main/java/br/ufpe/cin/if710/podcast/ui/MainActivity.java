@@ -3,6 +3,7 @@ package br.ufpe.cin.if710.podcast.ui;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import java.util.List;
 
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
+import br.ufpe.cin.if710.podcast.db.PodcastProvider;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
@@ -39,7 +41,7 @@ public class MainActivity extends Activity {
     private final String RSS_FEED = "http://leopoldomt.com/if710/fronteirasdaciencia.xml";
     //TODO teste com outros links de podcast
 
-    private ListView items;
+    private ListView itemsListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +50,7 @@ public class MainActivity extends Activity {
 
         Stetho.initializeWithDefaults(this);
 
-        items = (ListView) findViewById(R.id.items);
+        itemsListView = (ListView) findViewById(R.id.items);
     }
 
     @Override
@@ -81,7 +83,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
-        XmlFeedAdapter adapter = (XmlFeedAdapter) items.getAdapter();
+        XmlFeedAdapter adapter = (XmlFeedAdapter) itemsListView.getAdapter();
         adapter.clear();
     }
 
@@ -108,14 +110,7 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(List<ItemFeed> feed) {
             Toast.makeText(getApplicationContext(), "terminando...", Toast.LENGTH_SHORT).show();
-
-            //Adapter Personalizado
-            XmlFeedAdapter adapter = new XmlFeedAdapter(getApplicationContext(), R.layout.itemlista, feed);
-
-            //atualizar o list view
-            items.setAdapter(adapter);
-            items.setTextFilterEnabled(true);
-            
+            new ReadFromDataBase().execute();
         }
     }
 
@@ -165,4 +160,55 @@ public class MainActivity extends Activity {
         }
         return rssFeed;
     }
+
+
+    //AsyncTask para ler as coisas do banco
+    private class ReadFromDataBase extends AsyncTask<Void, Void, Cursor>{
+
+        @Override
+        protected Cursor doInBackground(Void... voids) {
+
+            Cursor cursor = getContentResolver().query(PodcastProviderContract.EPISODE_LIST_URI,
+                    null, null, null, null);
+
+            return cursor;
+
+        }
+
+
+        //inicializando o listview and set adapter. o onPostExecute() roda na main UI thread.
+        protected void onPostExecute(Cursor cursor){
+
+            List<ItemFeed> items = new ArrayList<>();
+
+            if (cursor != null) {
+                cursor.moveToFirst();
+
+                //recuperando as informacoes do banco
+                while (cursor.moveToNext()){
+
+                    String ep_title = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_TITLE));
+                    String ep_pubDate = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_DATE));
+                    String ep_downloadLink = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_DOWNLOAD_LINK));
+                    String ep_description = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_DESC));
+                    String ep_link = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_LINK));
+
+                    ItemFeed itemFeed = new ItemFeed(ep_title, ep_link, ep_pubDate, ep_description, ep_downloadLink);
+                    items.add(itemFeed);
+
+                }
+                //fechando o cursor
+                cursor.close();
+            }
+
+            //Adapter Personalizado
+            XmlFeedAdapter adapter = new XmlFeedAdapter(getApplicationContext(), R.layout.itemlista, items);
+
+            //atualizar o list view
+            itemsListView.setAdapter(adapter);
+            itemsListView.setTextFilterEnabled(true);
+
+        }
+    }
+
 }
