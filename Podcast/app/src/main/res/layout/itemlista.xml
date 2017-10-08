@@ -29,6 +29,8 @@
             android:layout_height="wrap_content"
             android:layout_marginRight="8dp"
             android:layout_weight="0.58"
+            android:backgroundTint="#5eb5bf"
+            android:textColor="#ffff"
             android:text="@string/action_download" />
 
     </LinearLayout>
