@@ -10,6 +10,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.view.View;
@@ -66,9 +68,11 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
         TextView item_title;
         TextView item_date;
         Button downloadButton;
+        MediaPlayer mediaPlayer;
     }
 
     private static ViewHolder viewHolder = null;
+
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
@@ -111,7 +115,11 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
 
                 if(holder.downloadButton.getText()=="play"){
                     Log.d("CLICKED", "PLAY");
-                    //// TODO: tocar o podcast 
+                    //// TODO: tocar o podcast
+                    Log.d("CLICKED", item.getLocalURI());
+                    holder.mediaPlayer = MediaPlayer.create(getContext(), Uri.parse(item.getLocalURI()));
+                    holder.mediaPlayer.setLooping(false);
+                    holder.mediaPlayer.start();
                     
                 }else {
                     //chamando o AsyncTask para aixar o posdcast selecionado
