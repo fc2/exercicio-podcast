@@ -29,6 +29,7 @@ import java.util.List;
 
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
+import br.ufpe.cin.if710.podcast.db.PodcastProvider;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
@@ -196,8 +197,9 @@ public class MainActivity extends Activity {
                     String ep_downloadLink = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_DOWNLOAD_LINK));
                     String ep_description = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_DESC));
                     String ep_link = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_LINK));
+                    String ep_episodeURI = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_FILE_URI));
 
-                    ItemFeed itemFeed = new ItemFeed(ep_title, ep_link, ep_pubDate, ep_description, ep_downloadLink);
+                    ItemFeed itemFeed = new ItemFeed(ep_title, ep_link, ep_pubDate, ep_description, ep_downloadLink,ep_episodeURI);
                     items.add(itemFeed);
 
                 }
