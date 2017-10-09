@@ -5,6 +5,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.util.List;
+
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -19,6 +21,7 @@ import android.widget.Toast;
 import android.util.Log;
 
 import br.ufpe.cin.if710.podcast.R;
+import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
 
@@ -211,7 +214,13 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
             Toast.makeText(context, "Finalizando o download...", Toast.LENGTH_SHORT).show();
 
             //todo salvar o caminho do arquivo no banco
-            Log.d(TAG, file.getPath());
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, file.getPath());
+
+            //update no banco
+            context.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI,contentValues,
+                    PodcastProviderContract.EPISODE_LINK + "= \"" + itemFeed.getLink() + "\"",
+                    null);
         }
     }
 }
