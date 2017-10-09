@@ -40,6 +40,7 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
     public static final String EP_DESCRIPTION = "Description";
 
 
+
     public PodcastFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
         super(context, resource, objects);
         linkResource = resource;
@@ -61,12 +62,13 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
 
 
     //http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder
-    static class ViewHolder {
+    public static class ViewHolder {
         TextView item_title;
         TextView item_date;
         Button downloadButton;
     }
 
+    private static ViewHolder viewHolder = null;
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
@@ -106,17 +108,33 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
         holder.downloadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //chamando o AsyncTask para aixar o posdcast selecionado
-                new DownloadPodcast(getContext(), item).execute();
-                holder.downloadButton.setText("Baixando...");
-                holder.downloadButton.setBackgroundColor(Color.LTGRAY);
 
-                holder.downloadButton.setEnabled(false);
+                if(holder.downloadButton.getText()=="play"){
+                    Log.d("CLICKED", "PLAY");
+                    //// TODO: tocar o podcast 
+                    
+                }else {
+                    //chamando o AsyncTask para aixar o posdcast selecionado
+                    new DownloadPodcast(getContext(), item).execute();
+                    holder.downloadButton.setText("Baixando...");
+                    holder.downloadButton.setBackgroundColor(Color.LTGRAY);
+                    holder.downloadButton.setEnabled(false);
+                    viewHolder = holder;
+                }
             }
         });
 
+
         return convertView;
     }
+
+    public static void activateButton(){
+
+        viewHolder.downloadButton.setEnabled(true);
+        viewHolder.downloadButton.setBackgroundColor(Color.parseColor("#FF5E78BF"));
+        viewHolder.downloadButton.setText("play");
+    }
+
 }
 
 
@@ -213,7 +231,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
             Log.d(TAG, "Fim do download!");
             Toast.makeText(context, "Finalizando o download...", Toast.LENGTH_SHORT).show();
 
-            //todo salvar o caminho do arquivo no banco
+            //salvando o caminho do file baixado no banco
             ContentValues contentValues = new ContentValues();
             contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, file.getPath());
 
@@ -221,6 +239,12 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
             context.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI,contentValues,
                     PodcastProviderContract.EPISODE_LINK + "= \"" + itemFeed.getLink() + "\"",
                     null);
+
+            PodcastFeedAdapter.activateButton();
+
+
+
+
         }
     }
 }
