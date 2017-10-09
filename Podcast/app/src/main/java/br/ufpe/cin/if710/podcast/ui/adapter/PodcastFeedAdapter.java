@@ -1,18 +1,31 @@
 package br.ufpe.cin.if710.podcast.ui.adapter;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.util.List;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Environment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.util.Log;
 
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
+
+
+import java.net.URL;
+import java.io.*;
+
+
 
 public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
 
@@ -89,10 +102,110 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
         holder.downloadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //// TODO: Baixar o posdcast
+                //chamando o AsyncTask para aixar o posdcast selecionado
+                new DownloadPodcast(getContext(), item).execute();
             }
         });
 
         return convertView;
+    }
+}
+
+
+//AsyncTask<Params, Progress, Result>
+class DownloadPodcast extends AsyncTask<Void, Void, Void>{
+
+    private ItemFeed itemFeed;
+    private Context context;
+    private String TAG = "DOWNLOAD_TASK";
+
+    private File file;
+
+
+    public DownloadPodcast(Context context, ItemFeed itemFeed){
+        this.itemFeed = itemFeed;
+        this.context = context;
+    }
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        Toast.makeText(context, "Baixando o episodio...", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected Void doInBackground(Void... voids) {
+
+        try {
+            //pegar o InputStream do url do episodio clicado
+            URL episodeURL = new URL(this.itemFeed.getDownloadLink());
+
+            //criando uma conexao
+            HttpURLConnection urlConnection = (HttpURLConnection) episodeURL.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.setDoOutput(true);
+            urlConnection.connect();
+
+            //dizendo onde vai salvar o file baixado
+
+            File folderSDCard = new File(Environment.getExternalStorageDirectory() + "/" + "Podcast");
+
+            if (!folderSDCard.exists()) {
+                folderSDCard.mkdir();
+            }
+
+            String fileName = this.itemFeed.getTitle() + ".mp3";
+            file = new File(folderSDCard, fileName);
+
+            if(!file.exists()){
+                file.createNewFile();
+                Log.d(TAG,"Arquivo criado!");
+            }else {
+                Log.d(TAG,"Esse arquivo já existe!");
+            }
+
+            //para escrever o dado baixado no arquivo criado
+            FileOutputStream outputStream = new FileOutputStream(file);
+            //ler os dados do arquivo
+            InputStream inputStream = urlConnection.getInputStream();
+
+            byte [] buffer = new byte[1024];
+            int bufferLength = 0;
+
+            while ((bufferLength = inputStream.read(buffer))>0){
+                outputStream.write(buffer, 0, bufferLength);
+            }
+
+            //fechando os streams quando finalizados
+            outputStream.close();
+            inputStream.close();
+
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+        super.onPostExecute(aVoid);
+
+        if(file == null){
+            Log.e(TAG, "Aconteceu alguma coisa errada!");
+            Toast.makeText(context, "Ocorreu um erro durante o download...", Toast.LENGTH_SHORT).show();
+        }else {
+            Log.d(TAG, "Fim do download!");
+            Toast.makeText(context, "Finalizando o download...", Toast.LENGTH_SHORT).show();
+
+            //todo salvar o caminho do arquivo no banco
+            Log.d(TAG, file.getPath());
+        }
     }
 }
