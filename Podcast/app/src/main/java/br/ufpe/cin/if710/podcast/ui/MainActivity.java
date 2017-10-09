@@ -134,7 +134,7 @@ public class MainActivity extends Activity {
             Uri uri = getContentResolver().insert(PodcastProviderContract.EPISODE_LIST_URI, contentValues);
 
             if(uri != null){
-                Log.d("AddItem", "Item added!");
+               // Log.d("AddItem", "Item added!");
             } else {
                 Log.e("AddItem", "Failed to add" + item.getTitle());
             }
