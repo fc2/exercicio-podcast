@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
+import java.net.URI;
 import java.util.List;
 
 import android.content.ContentValues;
@@ -14,6 +15,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -40,6 +42,11 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
     public static final String EP_TITLE = "Title";
     public static final String EP_PUBDATE = "PubDate";
     public static final String EP_DESCRIPTION = "Description";
+
+    public static final String baixar = "baixar";
+    public static final String play = "play";
+    public static final String pausar = "pausar";
+    public static final String continuar = "continuar";
 
 
 
@@ -113,22 +120,43 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
             @Override
             public void onClick(View view) {
 
-                if(holder.downloadButton.getText()=="play"){
-                    Log.d("CLICKED", "PLAY");
-                    //// TODO: tocar o podcast
-                    Log.d("CLICKED", item.getLocalURI());
-                    holder.mediaPlayer = MediaPlayer.create(getContext(), Uri.parse(item.getLocalURI()));
-                    holder.mediaPlayer.setLooping(false);
-                    holder.mediaPlayer.start();
-                    
-                }else {
-                    //chamando o AsyncTask para aixar o posdcast selecionado
-                    new DownloadPodcast(getContext(), item).execute();
-                    holder.downloadButton.setText("Baixando...");
-                    holder.downloadButton.setBackgroundColor(Color.LTGRAY);
-                    holder.downloadButton.setEnabled(false);
-                    viewHolder = holder;
+                String buttonState = (String) holder.downloadButton.getText();
+
+                switch (buttonState){
+
+                    case baixar:
+                        //chamando o AsyncTask para baixar o posdcast selecionado
+                        new DownloadPodcast(getContext(), item).execute();
+                        holder.downloadButton.setText("Baixando...");
+                        holder.downloadButton.setBackgroundColor(Color.LTGRAY);
+                        holder.downloadButton.setEnabled(false);
+                        viewHolder = holder;
+
+                        break;
+
+                    case play:
+                        //tocar o podcast selecionado
+                        Log.d("CLICKED", item.getLocalURI());
+                        holder.mediaPlayer = MediaPlayer.create(getContext(), Uri.parse(item.getLocalURI()));
+                        holder.mediaPlayer.setLooping(false);
+                        holder.mediaPlayer.start();
+                        holder.downloadButton.setText(pausar);
+
+                        break;
+
+                    case pausar:
+                        holder.mediaPlayer.pause();
+                        holder.downloadButton.setText(continuar);
+
+                        break;
+
+                    case continuar:
+                        holder.mediaPlayer.start();
+                        holder.downloadButton.setText(pausar);
+
+                        break;
                 }
+
             }
         });
 
@@ -182,7 +210,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
 
             //dizendo onde vai salvar o file baixado
 
-            File folderSDCard = new File(Environment.getExternalStorageDirectory() + "/" + "Podcast");
+            File folderSDCard = new File(Environment.getExternalStorageDirectory() + "/Podcast");
 
             if (!folderSDCard.exists()) {
                 folderSDCard.mkdir();
@@ -241,16 +269,16 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
 
             //salvando o caminho do file baixado no banco
             ContentValues contentValues = new ContentValues();
-            contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, file.getPath());
+
+            contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, this.file.getPath());
 
             //update no banco
             context.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI,contentValues,
                     PodcastProviderContract.EPISODE_LINK + "= \"" + itemFeed.getLink() + "\"",
                     null);
 
+            //ativar o botao depois que baixar e trocar a cor dele
             PodcastFeedAdapter.activateButton();
-
-
 
 
         }
