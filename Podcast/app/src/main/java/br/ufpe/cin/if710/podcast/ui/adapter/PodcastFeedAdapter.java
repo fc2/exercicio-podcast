@@ -7,6 +7,7 @@ import java.net.ProtocolException;
 import java.util.List;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.view.View;
@@ -66,7 +67,7 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
+        final ViewHolder holder;
         if (convertView == null) {
             convertView = View.inflate(getContext(), linkResource, null);
             holder = new ViewHolder();
@@ -104,6 +105,10 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
             public void onClick(View view) {
                 //chamando o AsyncTask para aixar o posdcast selecionado
                 new DownloadPodcast(getContext(), item).execute();
+                holder.downloadButton.setText("Baixando...");
+                holder.downloadButton.setBackgroundColor(Color.LTGRAY);
+
+                holder.downloadButton.setEnabled(false);
             }
         });
 
@@ -160,25 +165,26 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
             if(!file.exists()){
                 file.createNewFile();
                 Log.d(TAG,"Arquivo criado!");
+                //para escrever o dado baixado no arquivo criado
+                FileOutputStream outputStream = new FileOutputStream(file);
+                //ler os dados do arquivo
+                InputStream inputStream = urlConnection.getInputStream();
+
+                byte [] buffer = new byte[1024];
+                int bufferLength = 0;
+
+                while ((bufferLength = inputStream.read(buffer))>0){
+                    outputStream.write(buffer, 0, bufferLength);
+                }
+
+                //fechando os streams quando finalizados
+                outputStream.close();
+                inputStream.close();
+
             }else {
                 Log.d(TAG,"Esse arquivo já existe!");
             }
 
-            //para escrever o dado baixado no arquivo criado
-            FileOutputStream outputStream = new FileOutputStream(file);
-            //ler os dados do arquivo
-            InputStream inputStream = urlConnection.getInputStream();
-
-            byte [] buffer = new byte[1024];
-            int bufferLength = 0;
-
-            while ((bufferLength = inputStream.read(buffer))>0){
-                outputStream.write(buffer, 0, bufferLength);
-            }
-
-            //fechando os streams quando finalizados
-            outputStream.close();
-            inputStream.close();
 
 
         } catch (MalformedURLException e) {
