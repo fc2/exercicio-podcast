@@ -50,7 +50,7 @@ episódio, atualizações em segundo plano, notificações de novos episódios, 
 | 5 | ✅ |
 | 6 | ✅ |
 | 7 | 🎉 |
-| 8 | **não** |
+| 8 | ✅ |
 | 9 | **não** |
 | 10 | **não** |
 | 11 | **não** |
