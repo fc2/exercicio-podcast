@@ -1,12 +1,15 @@
 package br.ufpe.cin.if710.podcast.ui;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,6 +32,7 @@ import java.util.List;
 
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
+import br.ufpe.cin.if710.podcast.db.PodcastProvider;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
@@ -53,6 +57,8 @@ public class MainActivity extends Activity {
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
         itemsListView = (ListView) findViewById(R.id.items);
+
+        checkStoragePermission();
 
     }
 
@@ -196,8 +202,9 @@ public class MainActivity extends Activity {
                     String ep_downloadLink = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_DOWNLOAD_LINK));
                     String ep_description = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_DESC));
                     String ep_link = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_LINK));
+                    String ep_episodeURI = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_FILE_URI));
 
-                    ItemFeed itemFeed = new ItemFeed(ep_title, ep_link, ep_pubDate, ep_description, ep_downloadLink);
+                    ItemFeed itemFeed = new ItemFeed(ep_title, ep_link, ep_pubDate, ep_description, ep_downloadLink,ep_episodeURI);
                     items.add(itemFeed);
 
                 }
@@ -211,6 +218,16 @@ public class MainActivity extends Activity {
             //atualizar o list view
             itemsListView.setAdapter(adapter);
             itemsListView.setTextFilterEnabled(true);
+        }
+    }
+
+    public void checkStoragePermission(){
+        if(ActivityCompat.checkSelfPermission(getApplicationContext(),  Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0);
+        }else {
+            Log.d("PERMISSAO", "Write external storage já permitido.");
         }
     }
 

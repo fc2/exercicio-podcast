@@ -4,14 +4,26 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
+import java.net.URI;
+import java.security.Permissions;
 import java.util.List;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -24,6 +36,7 @@ import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
+import br.ufpe.cin.if710.podcast.ui.MainActivity;
 
 
 import java.net.URL;
@@ -38,6 +51,12 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
     public static final String EP_TITLE = "Title";
     public static final String EP_PUBDATE = "PubDate";
     public static final String EP_DESCRIPTION = "Description";
+
+    public static final String baixar = "baixar";
+    public static final String play = "play";
+    public static final String pausar = "pausar";
+    public static final String continuar = "continuar";
+
 
 
     public PodcastFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
@@ -61,11 +80,14 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
 
 
     //http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder
-    static class ViewHolder {
+    public static class ViewHolder {
         TextView item_title;
         TextView item_date;
         Button downloadButton;
+        MediaPlayer mediaPlayer;
     }
+
+    private static ViewHolder viewHolder = null;
 
 
     @Override
@@ -106,17 +128,59 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
         holder.downloadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //chamando o AsyncTask para aixar o posdcast selecionado
-                new DownloadPodcast(getContext(), item).execute();
-                holder.downloadButton.setText("Baixando...");
-                holder.downloadButton.setBackgroundColor(Color.LTGRAY);
 
-                holder.downloadButton.setEnabled(false);
+                String buttonState = (String) holder.downloadButton.getText();
+
+                switch (buttonState){
+
+                    case baixar:
+                        //chamando o AsyncTask para baixar o posdcast selecionado
+
+                        new DownloadPodcast(getContext(), item).execute();
+                        holder.downloadButton.setText("Baixando...");
+                        holder.downloadButton.setBackgroundColor(Color.LTGRAY);
+                        holder.downloadButton.setEnabled(false);
+                        viewHolder = holder;
+
+                        break;
+
+                    case play:
+                        //tocar o podcast selecionado
+                        Log.d("CLICKED", item.getLocalURI());
+                        holder.mediaPlayer = MediaPlayer.create(getContext(), Uri.parse(item.getLocalURI()));
+                        holder.mediaPlayer.setLooping(false);
+                        holder.mediaPlayer.start();
+                        holder.downloadButton.setText(pausar);
+
+                        break;
+
+                    case pausar:
+                        holder.mediaPlayer.pause();
+                        holder.downloadButton.setText(continuar);
+
+                        break;
+
+                    case continuar:
+                        holder.mediaPlayer.start();
+                        holder.downloadButton.setText(pausar);
+
+                        break;
+                }
+
             }
         });
 
+
         return convertView;
     }
+
+    public static void activateButton(){
+
+        viewHolder.downloadButton.setEnabled(true);
+        viewHolder.downloadButton.setBackgroundColor(Color.parseColor("#FF5E78BF"));
+        viewHolder.downloadButton.setText("play");
+    }
+
 }
 
 
@@ -127,6 +191,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
     private Context context;
     private String TAG = "DOWNLOAD_TASK";
 
+    private boolean downloadSucceded = false;
     private File file;
 
 
@@ -140,6 +205,8 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
         super.onPreExecute();
         Toast.makeText(context, "Baixando o episodio...", Toast.LENGTH_SHORT).show();
     }
+
+
 
     @Override
     protected Void doInBackground(Void... voids) {
@@ -155,15 +222,14 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
             urlConnection.connect();
 
             //dizendo onde vai salvar o file baixado
-
-            File folderSDCard = new File(Environment.getExternalStorageDirectory() + "/" + "Podcast");
-
+            File folderSDCard = new File(Environment.getExternalStorageDirectory() + "/Podcast");
             if (!folderSDCard.exists()) {
                 folderSDCard.mkdir();
             }
 
             String fileName = this.itemFeed.getTitle() + ".mp3";
             file = new File(folderSDCard, fileName);
+
 
             if(!file.exists()){
                 file.createNewFile();
@@ -175,11 +241,20 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
 
                 byte [] buffer = new byte[1024];
                 int bufferLength = 0;
+                int count = 0;
 
                 while ((bufferLength = inputStream.read(buffer))>0){
                     outputStream.write(buffer, 0, bufferLength);
+                    if(count != bufferLength){
+                        Log.d("DOWNLOAD", "baixando"+count);
+                    }
+                    count ++;
+                }
+                if(count!=bufferLength){
+                    this.downloadSucceded = true;
                 }
 
+                outputStream.flush();
                 //fechando os streams quando finalizados
                 outputStream.close();
                 inputStream.close();
@@ -197,6 +272,10 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        finally{
+
+        }
+
 
 
         return null;
@@ -206,21 +285,26 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
 
-        if(file == null){
+        if(file == null || !(downloadSucceded)){
             Log.e(TAG, "Aconteceu alguma coisa errada!");
             Toast.makeText(context, "Ocorreu um erro durante o download...", Toast.LENGTH_SHORT).show();
         }else {
             Log.d(TAG, "Fim do download!");
             Toast.makeText(context, "Finalizando o download...", Toast.LENGTH_SHORT).show();
 
-            //todo salvar o caminho do arquivo no banco
+            //salvando o caminho do file baixado no banco
             ContentValues contentValues = new ContentValues();
-            contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, file.getPath());
+
+            contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, this.file.getPath());
 
             //update no banco
             context.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI,contentValues,
                     PodcastProviderContract.EPISODE_LINK + "= \"" + itemFeed.getLink() + "\"",
                     null);
+
+            //ativar o botao depois que baixar e trocar a cor dele
+            PodcastFeedAdapter.activateButton();
+
         }
     }
 }
