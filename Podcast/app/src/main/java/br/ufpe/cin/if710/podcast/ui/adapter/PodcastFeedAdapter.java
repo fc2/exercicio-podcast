@@ -5,16 +5,24 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URI;
+import java.security.Permissions;
 import java.util.List;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +36,7 @@ import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
+import br.ufpe.cin.if710.podcast.ui.MainActivity;
 
 
 import java.net.URL;
@@ -126,6 +135,7 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
 
                     case baixar:
                         //chamando o AsyncTask para baixar o posdcast selecionado
+
                         new DownloadPodcast(getContext(), item).execute();
                         holder.downloadButton.setText("Baixando...");
                         holder.downloadButton.setBackgroundColor(Color.LTGRAY);
@@ -181,6 +191,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
     private Context context;
     private String TAG = "DOWNLOAD_TASK";
 
+    private boolean downloadSucceded = false;
     private File file;
 
 
@@ -194,6 +205,8 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
         super.onPreExecute();
         Toast.makeText(context, "Baixando o episodio...", Toast.LENGTH_SHORT).show();
     }
+
+
 
     @Override
     protected Void doInBackground(Void... voids) {
@@ -209,15 +222,14 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
             urlConnection.connect();
 
             //dizendo onde vai salvar o file baixado
-
             File folderSDCard = new File(Environment.getExternalStorageDirectory() + "/Podcast");
-
             if (!folderSDCard.exists()) {
                 folderSDCard.mkdir();
             }
 
             String fileName = this.itemFeed.getTitle() + ".mp3";
             file = new File(folderSDCard, fileName);
+
 
             if(!file.exists()){
                 file.createNewFile();
@@ -229,11 +241,20 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
 
                 byte [] buffer = new byte[1024];
                 int bufferLength = 0;
+                int count = 0;
 
                 while ((bufferLength = inputStream.read(buffer))>0){
                     outputStream.write(buffer, 0, bufferLength);
+                    if(count != bufferLength){
+                        Log.d("DOWNLOAD", "baixando"+count);
+                    }
+                    count ++;
+                }
+                if(count!=bufferLength){
+                    this.downloadSucceded = true;
                 }
 
+                outputStream.flush();
                 //fechando os streams quando finalizados
                 outputStream.close();
                 inputStream.close();
@@ -251,6 +272,10 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        finally{
+
+        }
+
 
 
         return null;
@@ -260,7 +285,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
 
-        if(file == null){
+        if(file == null || !(downloadSucceded)){
             Log.e(TAG, "Aconteceu alguma coisa errada!");
             Toast.makeText(context, "Ocorreu um erro durante o download...", Toast.LENGTH_SHORT).show();
         }else {
