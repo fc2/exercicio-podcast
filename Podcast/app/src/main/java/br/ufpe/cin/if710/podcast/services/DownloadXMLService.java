@@ -1,8 +1,28 @@
 package br.ufpe.cin.if710.podcast.services;
 
 import android.app.IntentService;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.Context;
+import android.net.Uri;
+import android.support.annotation.Nullable;
+import android.util.Log;
+
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
+import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
+import br.ufpe.cin.if710.podcast.domain.ItemFeed;
+import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
+import br.ufpe.cin.if710.podcast.ui.MainActivity;
 
 
 public class DownloadXMLService extends IntentService {
@@ -10,80 +30,83 @@ public class DownloadXMLService extends IntentService {
     //debug tag
     private String TAG = "ServiceXML";
 
-    // TODO: Rename actions, choose action names that describe tasks that this
-    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_FOO = "br.ufpe.cin.if710.podcast.services.action.FOO";
-    private static final String ACTION_BAZ = "br.ufpe.cin.if710.podcast.services.action.BAZ";
+    public static final String FINISHED_DOWNLOADED_XML = "br.ufpe.cin.if710.podcast.services.action.FINISHED_DOWNLOADED_XML";
 
-    // TODO: Rename parameters
-    private static final String EXTRA_PARAM1 = "br.ufpe.cin.if710.podcast.services.extra.PARAM1";
-    private static final String EXTRA_PARAM2 = "br.ufpe.cin.if710.podcast.services.extra.PARAM2";
+    public static final String EXTRA_RSS_FEED = "RSS_FEED";
 
     public DownloadXMLService() {
         super("DownloadXMLService");
     }
 
-    /**
-     * Starts this service to perform action Foo with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionFoo(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, DownloadXMLService.class);
-        intent.setAction(ACTION_FOO);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, DownloadXMLService.class);
-        intent.setAction(ACTION_BAZ);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
-            final String action = intent.getAction();
-            if (ACTION_FOO.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionFoo(param1, param2);
-            } else if (ACTION_BAZ.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBaz(param1, param2);
+    protected void onHandleIntent(@Nullable Intent intent) {
+
+        List<ItemFeed> itemList = new ArrayList<>();
+        try {
+
+            String RSSFeedURL = intent.getStringExtra(EXTRA_RSS_FEED);
+
+            itemList = XmlFeedParser.parse(getRssFeed(RSSFeedURL));
+            saveItems(itemList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+        }
+
+        // Send the feedback message to the MainActivity
+        Intent finishedDownloadedIntent = new Intent(DownloadXMLService.FINISHED_DOWNLOADED_XML);
+        finishedDownloadedIntent.putExtra("Intent", "downloaded!");
+        sendBroadcast(finishedDownloadedIntent);
+    }
+
+
+    //funcao para adicionar os items no banco
+    private void saveItems(List<ItemFeed> itemsList){
+
+        for (ItemFeed item : itemsList){
+            ContentValues contentValues = new ContentValues();
+
+            contentValues.put(PodcastDBHelper.EPISODE_TITLE, item.getTitle());
+            contentValues.put(PodcastDBHelper.EPISODE_LINK, item.getLink());
+            contentValues.put(PodcastDBHelper.EPISODE_DESC, item.getDescription());
+            contentValues.put(PodcastDBHelper.EPISODE_DOWNLOAD_LINK, item.getDownloadLink());
+            contentValues.put(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
+            contentValues.put(PodcastDBHelper.EPISODE_FILE_URI, "");
+
+            Uri uri = getContentResolver().insert(PodcastProviderContract.EPISODE_LIST_URI, contentValues);
+
+            if(uri != null){
+                // Log.d("AddItem", "Item added!");
+            } else {
+                Log.e("AddItem", "Failed to add" + item.getTitle());
             }
+
         }
     }
 
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionFoo(String param1, String param2) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
+
+    private String getRssFeed(String feed) throws IOException {
+        InputStream in = null;
+        String rssFeed = "";
+        try {
+            URL url = new URL(feed);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            in = conn.getInputStream();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            for (int count; (count = in.read(buffer)) != -1; ) {
+                out.write(buffer, 0, count);
+            }
+            byte[] response = out.toByteArray();
+            rssFeed = new String(response, "UTF-8");
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+        }
+        return rssFeed;
     }
 
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
 }

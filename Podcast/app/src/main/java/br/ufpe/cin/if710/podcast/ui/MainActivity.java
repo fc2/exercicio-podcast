@@ -2,7 +2,9 @@ package br.ufpe.cin.if710.podcast.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -36,16 +38,22 @@ import br.ufpe.cin.if710.podcast.db.PodcastProvider;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
+import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
 import br.ufpe.cin.if710.podcast.ui.adapter.PodcastFeedAdapter;
+
+import android.content.IntentFilter;
 
 public class MainActivity extends Activity {
 
     //ao fazer envio da resolucao, use este link no seu codigo!
     private final String RSS_FEED = "http://leopoldomt.com/if710/fronteirasdaciencia.xml";
+
     //TODO teste com outros links de podcast
 
     private ListView itemsListView;
     private ProgressBar mLoadingIndicator;
+
+    private FinishedXMLDownloadedReceiver finishedDownloadedXMLReceiver = new FinishedXMLDownloadedReceiver();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +94,17 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        new DownloadXmlTask().execute(RSS_FEED);
+
+        //new DownloadXmlTask().execute(RSS_FEED);
+
+        // iniciando o IntentService pra fazer o parse e salvar no banco
+        Intent downloadXML = new Intent(getApplicationContext(), DownloadXMLService.class);
+        downloadXML.putExtra(DownloadXMLService.EXTRA_RSS_FEED, RSS_FEED);
+        getApplicationContext().startService(downloadXML);
+
+        //registrar o broadcast receiver para poder receber as mensagens
+        this.registerReceiver(this.finishedDownloadedXMLReceiver,
+                new IntentFilter(DownloadXMLService.FINISHED_DOWNLOADED_XML));
     }
 
     @Override
@@ -96,79 +114,11 @@ public class MainActivity extends Activity {
         adapter.clear();
     }
 
-    private class DownloadXmlTask extends AsyncTask<String, Void, List<ItemFeed>> {
-        @Override
-        protected void onPreExecute() {
-            Toast.makeText(getApplicationContext(), "iniciando...", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        protected List<ItemFeed> doInBackground(String... params) {
-            List<ItemFeed> itemList = new ArrayList<>();
-            try {
-                itemList = XmlFeedParser.parse(getRssFeed(params[0]));
-                saveItems(itemList);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (XmlPullParserException e) {
-                e.printStackTrace();
-            }
-            return itemList;
-        }
-
-        @Override
-        protected void onPostExecute(List<ItemFeed> feed) {
-            Toast.makeText(getApplicationContext(), "terminando...", Toast.LENGTH_SHORT).show();
-            new ReadFromDataBase().execute();
-            mLoadingIndicator.setVisibility(View.INVISIBLE);
-        }
-    }
-
-    //funcao para adicionar os items no banco
-    private void saveItems(List<ItemFeed> itemsList){
-
-        for (ItemFeed item : itemsList){
-            ContentValues contentValues = new ContentValues();
-
-            contentValues.put(PodcastDBHelper.EPISODE_TITLE, item.getTitle());
-            contentValues.put(PodcastDBHelper.EPISODE_LINK, item.getLink());
-            contentValues.put(PodcastDBHelper.EPISODE_DESC, item.getDescription());
-            contentValues.put(PodcastDBHelper.EPISODE_DOWNLOAD_LINK, item.getDownloadLink());
-            contentValues.put(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
-            contentValues.put(PodcastDBHelper.EPISODE_FILE_URI, "");
-
-            Uri uri = getContentResolver().insert(PodcastProviderContract.EPISODE_LIST_URI, contentValues);
-
-            if(uri != null){
-               // Log.d("AddItem", "Item added!");
-            } else {
-                Log.e("AddItem", "Failed to add" + item.getTitle());
-            }
-
-        }
-    }
-
-    //TODO Opcional - pesquise outros meios de obter arquivos da internet
-    private String getRssFeed(String feed) throws IOException {
-        InputStream in = null;
-        String rssFeed = "";
-        try {
-            URL url = new URL(feed);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            in = conn.getInputStream();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            for (int count; (count = in.read(buffer)) != -1; ) {
-                out.write(buffer, 0, count);
-            }
-            byte[] response = out.toByteArray();
-            rssFeed = new String(response, "UTF-8");
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-        }
-        return rssFeed;
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //unregister o receiver
+        unregisterReceiver(this.finishedDownloadedXMLReceiver);
     }
 
 
@@ -218,7 +168,9 @@ public class MainActivity extends Activity {
             //atualizar o list view
             itemsListView.setAdapter(adapter);
             itemsListView.setTextFilterEnabled(true);
+            mLoadingIndicator.setVisibility(View.INVISIBLE);
         }
+
     }
 
     public void checkStoragePermission(){
@@ -230,5 +182,17 @@ public class MainActivity extends Activity {
             Log.d("PERMISSAO", "Write external storage já permitido.");
         }
     }
+
+    public class FinishedXMLDownloadedReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //quando acabar lá, ler as coisas do banco
+            new ReadFromDataBase().execute();
+        }
+    }
+
+
+
 
 }
