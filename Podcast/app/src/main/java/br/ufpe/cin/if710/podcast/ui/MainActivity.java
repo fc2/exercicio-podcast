@@ -1,12 +1,15 @@
 package br.ufpe.cin.if710.podcast.ui;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -54,6 +57,8 @@ public class MainActivity extends Activity {
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
         itemsListView = (ListView) findViewById(R.id.items);
+
+        checkStoragePermission();
 
     }
 
@@ -213,6 +218,16 @@ public class MainActivity extends Activity {
             //atualizar o list view
             itemsListView.setAdapter(adapter);
             itemsListView.setTextFilterEnabled(true);
+        }
+    }
+
+    public void checkStoragePermission(){
+        if(ActivityCompat.checkSelfPermission(getApplicationContext(),  Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0);
+        }else {
+            Log.d("PERMISSAO", "Write external storage já permitido.");
         }
     }
 
