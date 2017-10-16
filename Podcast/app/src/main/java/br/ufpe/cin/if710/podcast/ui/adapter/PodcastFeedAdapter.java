@@ -174,11 +174,18 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
         return convertView;
     }
 
-    public static void activateButton(){
 
-        viewHolder.downloadButton.setEnabled(true);
-        viewHolder.downloadButton.setBackgroundColor(Color.parseColor("#FF5E78BF"));
-        viewHolder.downloadButton.setText("play");
+    public static void activatePlayButton(Boolean bool){
+
+        if(bool){
+            viewHolder.downloadButton.setEnabled(true);
+            viewHolder.downloadButton.setBackgroundColor(Color.parseColor("#FF5E78BF"));
+            viewHolder.downloadButton.setText("play");
+        }else {
+            viewHolder.downloadButton.setEnabled(true);
+            viewHolder.downloadButton.setBackgroundColor(Color.parseColor("#5EB5BF"));
+            viewHolder.downloadButton.setText("baixar");
+        }
     }
 
 }
@@ -193,6 +200,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
 
     private boolean downloadSucceded = false;
     private File file;
+    private boolean alreadyExisted = false;
 
 
     public DownloadPodcast(Context context, ItemFeed itemFeed){
@@ -261,6 +269,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
 
             }else {
                 Log.d(TAG,"Esse arquivo já existe!");
+                alreadyExisted = true;
             }
 
 
@@ -285,9 +294,13 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
 
-        if(file == null || !(downloadSucceded)){
+        if(alreadyExisted){
+            PodcastFeedAdapter.activatePlayButton(true);
+        }
+        else if(file == null || !(downloadSucceded)){
             Log.e(TAG, "Aconteceu alguma coisa errada!");
-            Toast.makeText(context, "Ocorreu um erro durante o download...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Ocorreu um erro durante o download...", Toast.LENGTH_LONG).show();
+
         }else {
             Log.d(TAG, "Fim do download!");
             Toast.makeText(context, "Finalizando o download...", Toast.LENGTH_SHORT).show();
@@ -303,7 +316,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
                     null);
 
             //ativar o botao depois que baixar e trocar a cor dele
-            PodcastFeedAdapter.activateButton();
+            PodcastFeedAdapter.activatePlayButton(true);
 
         }
     }
