@@ -174,11 +174,18 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
         return convertView;
     }
 
-    public static void activateButton(){
 
-        viewHolder.downloadButton.setEnabled(true);
-        viewHolder.downloadButton.setBackgroundColor(Color.parseColor("#FF5E78BF"));
-        viewHolder.downloadButton.setText("play");
+    public static void activateButton(Boolean error){
+
+        if(error){
+            viewHolder.downloadButton.setEnabled(true);
+            viewHolder.downloadButton.setBackgroundColor(Color.parseColor("#5EB5BF"));
+            viewHolder.downloadButton.setText("baixar");
+        }else {
+            viewHolder.downloadButton.setEnabled(true);
+            viewHolder.downloadButton.setBackgroundColor(Color.parseColor("#FF5E78BF"));
+            viewHolder.downloadButton.setText("play");
+        }
     }
 
 }
@@ -287,7 +294,8 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
 
         if(file == null || !(downloadSucceded)){
             Log.e(TAG, "Aconteceu alguma coisa errada!");
-            Toast.makeText(context, "Ocorreu um erro durante o download...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Ocorreu um erro durante o download...", Toast.LENGTH_LONG).show();
+            PodcastFeedAdapter.activateButton(true);
         }else {
             Log.d(TAG, "Fim do download!");
             Toast.makeText(context, "Finalizando o download...", Toast.LENGTH_SHORT).show();
@@ -303,7 +311,7 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
                     null);
 
             //ativar o botao depois que baixar e trocar a cor dele
-            PodcastFeedAdapter.activateButton();
+            PodcastFeedAdapter.activateButton(false);
 
         }
     }
