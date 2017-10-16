@@ -153,9 +153,18 @@ public class MainActivity extends Activity {
                     String ep_description = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_DESC));
                     String ep_link = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_LINK));
                     String ep_episodeURI = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_FILE_URI));
+                    String audioCurrentTime = cursor.getString(cursor.getColumnIndexOrThrow(PodcastProviderContract.EPISODE_AUDIO_CURRENT_TIME));
 
-                    ItemFeed itemFeed = new ItemFeed(ep_title, ep_link, ep_pubDate, ep_description, ep_downloadLink,ep_episodeURI);
+                    int currentTime;
+                    if(audioCurrentTime != null){
+                        currentTime = Integer.parseInt(audioCurrentTime);
+                    }else {
+                        currentTime = 0;
+                    }
+
+                    ItemFeed itemFeed = new ItemFeed(ep_title, ep_link, ep_pubDate, ep_description, ep_downloadLink,ep_episodeURI, currentTime);
                     items.add(itemFeed);
+
 
                 }
                 //fechando o cursor

@@ -74,6 +74,7 @@ public class DownloadXMLService extends IntentService {
             contentValues.put(PodcastDBHelper.EPISODE_DOWNLOAD_LINK, item.getDownloadLink());
             contentValues.put(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
             contentValues.put(PodcastDBHelper.EPISODE_FILE_URI, "");
+            contentValues.put(PodcastDBHelper.EPISODE_AUDIO_CURRENT_TIME, item.getAudioCurrentTime());
 
             Uri uri = getContentResolver().insert(PodcastProviderContract.EPISODE_LIST_URI, contentValues);
 

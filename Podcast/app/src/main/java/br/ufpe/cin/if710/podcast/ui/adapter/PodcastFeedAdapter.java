@@ -33,6 +33,7 @@ import android.widget.Toast;
 import android.util.Log;
 
 import br.ufpe.cin.if710.podcast.R;
+import br.ufpe.cin.if710.podcast.db.PodcastProvider;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
@@ -124,6 +125,44 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
             }
         }));
 
+        //se o podcast ja tinha sido escutaddo antes retomar da onde parou
+        if(item.getAudioCurrentTime() > 0){
+            holder.downloadButton.setText("continuar");
+            holder.downloadButton.setBackgroundColor(Color.parseColor("#FF5E78BF"));
+
+            holder.mediaPlayer = MediaPlayer.create(getContext(), Uri.parse(item.getLocalURI()));
+            holder.mediaPlayer.setLooping(false);
+
+            //se acabar de escutar o audio, deletar
+
+            holder.mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    File episode = new File(item.getLocalURI());
+
+                    if(episode.delete()){
+                        //zero o current time dele e salva o novo caminho uri(null) e o tempo
+                        item.setAudioCurrentTime(0);
+
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, "");
+                        contentValues.put(PodcastProviderContract.EPISODE_AUDIO_CURRENT_TIME, 0);
+
+                        //faz o update no banco
+                        getContext().getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI,
+                                contentValues, PodcastProviderContract.EPISODE_LINK + "= \"" + item.getLink() + "\"",
+                                null);
+
+                        holder.downloadButton.setText("baixar");
+
+                    }else {
+                        Log.e("Episode Delete", "Deu algum erro!");
+                    }
+                }
+            });
+        }
+
+
         //ouvindo click no botao de baixar
         holder.downloadButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -156,11 +195,32 @@ public class PodcastFeedAdapter extends ArrayAdapter<ItemFeed> {
 
                     case pausar:
                         holder.mediaPlayer.pause();
+
+                        //salvar o tempo que o audio foi pausado
+                        int currentTime = holder.mediaPlayer.getCurrentPosition();
+                        item.setAudioCurrentTime(currentTime);
+                        Log.d("Audio Time", "salvando tempo" + currentTime);
+
+                        //salvando no banco
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(PodcastProviderContract.EPISODE_AUDIO_CURRENT_TIME, item.getAudioCurrentTime());
+
+                        //faz o update no banco
+                        getContext().getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI,
+                                contentValues, PodcastProviderContract.EPISODE_LINK + "= \"" + item.getLink() + "\"",
+                                null);
+
+
                         holder.downloadButton.setText(continuar);
 
                         break;
 
                     case continuar:
+
+                        //retomar de onde parou da ultima vez
+                        holder.mediaPlayer.seekTo(item.getAudioCurrentTime());
+                        Log.d("Audio Time Salvo", "comecando no" + item.getAudioCurrentTime());
+
                         holder.mediaPlayer.start();
                         holder.downloadButton.setText(pausar);
 

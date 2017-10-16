@@ -7,15 +7,18 @@ public class ItemFeed {
     private final String description;
     private final String downloadLink;
     private final String localURI;
+    private int audioCurrentTime;
 
 
-    public ItemFeed(String title, String link, String pubDate, String description, String downloadLink, String localURI) {
+    public ItemFeed(String title, String link, String pubDate, String description,
+                    String downloadLink, String localURI, int audioCurrentTime) {
         this.title = title;
         this.link = link;
         this.pubDate = pubDate;
         this.description = description;
         this.downloadLink = downloadLink;
         this.localURI = localURI;
+        this.audioCurrentTime = audioCurrentTime;
     }
 
     public String getTitle() {
@@ -40,6 +43,14 @@ public class ItemFeed {
 
     public String getLocalURI() {
         return localURI;
+    }
+
+    public int getAudioCurrentTime() {
+        return audioCurrentTime;
+    }
+
+    public void setAudioCurrentTime(int audioCurrentTime) {
+        this.audioCurrentTime = audioCurrentTime;
     }
 
     @Override
