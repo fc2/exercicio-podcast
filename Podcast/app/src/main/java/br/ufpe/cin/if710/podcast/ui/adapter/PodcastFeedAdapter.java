@@ -343,6 +343,16 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
         }
         finally{
 
+            //salvando o caminho do file baixado no banco
+            ContentValues contentValues = new ContentValues();
+
+            contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, this.file.getPath());
+
+            //update no banco
+            context.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI,contentValues,
+                    PodcastProviderContract.EPISODE_LINK + "= \"" + itemFeed.getLink() + "\"",
+                    null);
+
         }
 
 
@@ -365,19 +375,8 @@ class DownloadPodcast extends AsyncTask<Void, Void, Void>{
             Log.d(TAG, "Fim do download!");
             Toast.makeText(context, "Finalizando o download...", Toast.LENGTH_SHORT).show();
 
-            //salvando o caminho do file baixado no banco
-            ContentValues contentValues = new ContentValues();
-
-            contentValues.put(PodcastProviderContract.EPISODE_FILE_URI, this.file.getPath());
-
-            //update no banco
-            context.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI,contentValues,
-                    PodcastProviderContract.EPISODE_LINK + "= \"" + itemFeed.getLink() + "\"",
-                    null);
-
             //ativar o botao depois que baixar e trocar a cor dele
             PodcastFeedAdapter.activatePlayButton(true);
-
         }
     }
 }
